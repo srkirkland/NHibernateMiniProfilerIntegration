@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Mapping;
@@ -15,17 +12,14 @@ namespace NhProfilerProxy.Controllers
         {
             ViewBag.Message = "Welcome to ASP.NET MVC!";
 
-            return View();
-        }
-
-        public ActionResult About()
-        {
             var configuration = Fluently
                 .Configure()
                 .Database(
-                    FluentNHibernate.Cfg.Db.MsSqlConfiguration.MsSql2008.AdoNetBatchSize(25).ConnectionString(
-                        x => x.Server(@".\SQLExpress").Database("Northwind").TrustedConnection()).Driver
-                        <ProfiledSql2008ClientDriver>())
+                    FluentNHibernate.Cfg.Db.MsSqlConfiguration.MsSql2008
+                        .AdoNetBatchSize(25) //Commenting out the batching removes the error (though of course is not desired)
+                        .ConnectionString(x => x.Server(@".\SQLExpress").Database("Northwind").TrustedConnection())
+                        .Driver<ProfiledSql2008ClientDriver>() //Profiled sql client driver
+                )
                 .Mappings(x => x.FluentMappings.AddFromAssemblyOf<Order>());
 
             var sessionFactory = configuration.BuildSessionFactory();
@@ -34,12 +28,22 @@ namespace NhProfilerProxy.Controllers
             {
                 using (var transaction = session.BeginTransaction())
                 {
-                    var order = session.Get<Order>(10249);
+                    var order = session.Get<Order>(11086);
+
+                    //Getting the order doesn't thrown an error, but when a change is made and saved, the error is thrown
+                    order.ShipName = "Shipper #" + new Random().Next(1000);
+                   
+                    session.SaveOrUpdate(order);
 
                     transaction.Commit();
                 }
             }
 
+            return View();
+        }
+
+        public ActionResult About()
+        {
             return View();
         }
     }
