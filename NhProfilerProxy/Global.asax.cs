@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
+using MvcMiniProfiler;
 
 namespace NhProfilerProxy
 {
@@ -35,6 +36,35 @@ namespace NhProfilerProxy
 
             RegisterGlobalFilters(GlobalFilters.Filters);
             RegisterRoutes(RouteTable.Routes);
+
+            InitProfilerSettings();
+        }
+
+        private static void InitProfilerSettings()
+        {
+            //Don't profile any resource files 
+            //MiniProfiler.Settings.IgnoredPaths = new[] { "/mini-profiler-", "/css/", "/scripts/", "/images/", "/favicon.ico" };
+
+            //Clean up the nhibernate stack trace
+            MiniProfiler.Settings.ExcludeAssembly("mscorlib");
+            MiniProfiler.Settings.ExcludeAssembly("NHibernate");
+            MiniProfiler.Settings.ExcludeAssembly("System.Web.Extensions");
+            MiniProfiler.Settings.ExcludeType("DbCommandProxy");
+
+            MiniProfiler.Settings.SqlFormatter = new MvcMiniProfiler.SqlFormatters.InlineFormatter();
+        }
+
+        protected void Application_BeginRequest()
+        {
+            if (Request.IsLocal)
+            {
+                MiniProfiler.Start();
+            }
+        }
+
+        protected void Application_EndRequest()
+        {
+            MiniProfiler.Stop();
         }
     }
 }
