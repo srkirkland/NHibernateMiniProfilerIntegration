@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Mapping;
+using NhProfilerProxy.Helpers;
 
 namespace NhProfilerProxy.Controllers
 {
@@ -23,7 +24,8 @@ namespace NhProfilerProxy.Controllers
                 .Configure()
                 .Database(
                     FluentNHibernate.Cfg.Db.MsSqlConfiguration.MsSql2008.AdoNetBatchSize(25).ConnectionString(
-                        x => x.Server(@".\SQLExpress").Database("Northwind").TrustedConnection()))
+                        x => x.Server(@".\SQLExpress").Database("Northwind").TrustedConnection()).Driver
+                        <ProfiledSql2008ClientDriver>())
                 .Mappings(x => x.FluentMappings.AddFromAssemblyOf<Order>());
 
             var sessionFactory = configuration.BuildSessionFactory();
